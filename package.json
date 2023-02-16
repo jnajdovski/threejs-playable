@@ -34,8 +34,8 @@
     "webpack-dev-server": "^2.4.5"
   },
   "dependencies": {
-    "webvr-polyfill": "^0.9.38",
     "gsap": "^1.20.2",
-    "three": "^0.87.1"
+    "three": "^0.149.0",
+    "webvr-polyfill": "^0.9.38"
   }
 }

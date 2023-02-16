@@ -5,7 +5,7 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
-module.exports = function(env) {
+module.exports = function (env) {
     let plugins = [
         new webpack.ProvidePlugin({
             THREE: 'three',
@@ -20,7 +20,7 @@ module.exports = function(env) {
         new webpack.optimize.CommonsChunkPlugin({
             name: 'vendor',
             minChunks: function (module) {
-               return module.context && module.context.indexOf('node_modules') !== -1;
+                return module.context && module.context.indexOf('node_modules') !== -1;
             }
         }),
         // create webpack manifest separately
@@ -36,8 +36,7 @@ module.exports = function(env) {
     if (env == 'dev') {
 
 
-    }
-    else {
+    } else {
 
         // uglify
         plugins.push(new UglifyJSPlugin({
@@ -49,7 +48,7 @@ module.exports = function(env) {
     }
 
     return {
-        context: path.resolve(__dirname, 'app'),
+        context: path.resolve(__dirname, 'src'),
         devServer: {
             host: "0.0.0.0",
             disableHostCheck: true
@@ -71,12 +70,12 @@ module.exports = function(env) {
                         presets: ['env']
                     }
                 }
-             },{
+            }, {
                 test: /\.css$/,
                 use: ExtractTextPlugin.extract({
                     use: 'css-loader'
                 })
-            },{
+            }, {
                 test: [/\.mp3$/, /\.dae$/, /\.jpg$/, /\.obj$/, /\.fbx$/],
                 use: ['file-loader?name=[path][name].[hash].[ext]']
             }]
