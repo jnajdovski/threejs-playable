@@ -11,6 +11,7 @@ export default class Game {
         this.container = document.querySelector('#main');
         document.body.appendChild(this.container);
 
+        this.clock = new THREE.Clock(true)
         this.creteRenderer()
 
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -55,7 +56,7 @@ export default class Game {
 
     render() {
         this.renderer.render(this.scene, this.camera);
-        this.playerObj.updatePlayer()
+        this.playerObj.updatePlayer(this.clock.getDelta())
         this.camera.position.set(this.playerObj.player.position.x, this.playerObj.player.position.y + 1, this.playerObj.player.position.z + 3)
         this.lights.directionalLight.position.set(this.playerObj.player.position.x - 5, this.playerObj.player.position.y + 25, this.playerObj.player.position.z - 1);
     }
