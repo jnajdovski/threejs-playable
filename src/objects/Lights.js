@@ -9,7 +9,7 @@ export default class Lights {
         this.ambientLight.position.set(0.5, 2, 0.5)
         scene.add(this.ambientLight);
 
-        this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.3, 50);
+        this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.7, 50);
         this.directionalLight.position.set(1, 2, -1);
         this.directionalLight.castShadow = true;
         this.directionalLight.shadow.mapSize.width = 2048;
@@ -17,9 +17,5 @@ export default class Lights {
         this.directionalLight.shadow.radius = 10;
 
         scene.add(this.directionalLight)
-    }
-
-    createBall() {
-
     }
 }
