@@ -7,7 +7,7 @@ export default class GroundObject {
     constructor(scene) {
         const groundGeo = new THREE.BoxGeometry(8, 0.2, 150)
         const groundMaterial = new THREE.MeshStandardMaterial({
-            color: 0xff0000,
+            color: 0x145999,
         });
 
         this.ground = new THREE.Mesh(groundGeo, groundMaterial)
