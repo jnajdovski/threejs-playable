@@ -29,15 +29,15 @@ export default class Game {
         this.container = document.querySelector('#main');
         document.body.appendChild(this.container);
 
+        this.scene = new THREE.Scene();
+        const loader = new THREE.TextureLoader();
+        this.scene.background = loader.load('assets/background.jpg')
+
         this.clock = new THREE.Clock(true)
         this.creteRenderer()
 
         this.ballsArray = []
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.4, 35);
-
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x924ef2);
-        this.scene.backgroundIntensity = 0.85
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.5, 35);
 
         this.lights = new Lights(this.scene)
         const {
@@ -115,7 +115,6 @@ export default class Game {
     }
 
     update() {
-        this.renderer.render(this.scene, this.camera);
         if (!this.gameFinished) {
             this.playerObj.update(this.clock.getDelta())
             this.camera.position.set(this.playerObj.player.position.x, this.playerObj.player.position.y + 2, this.playerObj.player.position.z + 3)
@@ -138,7 +137,9 @@ export default class Game {
                 }, 10000);
             }
         }
-
+        this.renderer.autoClear = false
+        this.renderer.clear()
+        this.renderer.render(this.scene, this.camera);
     }
 
     updateBalls() {
