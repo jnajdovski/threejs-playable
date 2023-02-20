@@ -8,15 +8,24 @@ export default class PlayerObject {
      * 
      * @param {THREE.Scene} scene 
      */
-    constructor(scene) {
+    constructor(scene, camera, ground) {
         this.movementSpeed = 1.8
         this.rotateSpeed = 0.5
         this.moveLeft = false
         this.moveRight = false
         this.maxMoveLeft = -3.2
         this.maxMoveRight = 3.4
-        this.maxRotateLeft = 0.25
-        this.maxRotateRight = -0.25
+        this.startGame = false
+
+        this.currentZpos = 0;
+
+        this.camera = camera
+        this.ground = ground
+
+        this.raycaster = new THREE.Raycaster();
+        this.pointer = new THREE.Vector2();
+        this.ico;
+        this.mousePressed = false;
 
         const geometry = new THREE.BufferGeometry();
         const vertices = new Float32Array([
@@ -87,6 +96,19 @@ export default class PlayerObject {
             if (keyDown(event) === 'left') this.moveLeft = false
             if (keyDown(event) === 'right') this.moveRight = false
         });
+
+        window.addEventListener('pointermove', (e) => {
+            if (this.mousePressed) {
+                this.pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+                this.pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            }
+        }, false);
+
+        window.addEventListener('pointerdown', () => {
+            this.mousePressed = true
+            this.startGame = true
+        }, false);
+        window.addEventListener('pointerup', () => this.mousePressed = false, false);
     }
 
     canMoveLeft() {
@@ -95,14 +117,6 @@ export default class PlayerObject {
 
     canMoveRight() {
         return this.player.position.x < this.maxMoveRight
-    }
-
-    canRotateLeft() {
-        return this.player.rotation.y < this.maxRotateLeft
-    }
-
-    canRotateRight() {
-        return this.player.rotation.y > this.maxRotateRight
     }
 
     /**
@@ -129,14 +143,28 @@ export default class PlayerObject {
      * @param {number} delta 
      */
     update(delta) {
-        const actualMoveSpeed = delta * this.movementSpeed;
-        const actualRotateSpeed = delta * this.rotateSpeed;
-        this.player.position.z -= 0.05
-        if (this.moveRight && this.canMoveRight()) this.player.translateX(actualMoveSpeed)
-        if (this.moveLeft && this.canMoveLeft()) this.player.translateX(-actualMoveSpeed)
-        if (this.moveRight && this.canRotateRight()) this.player.rotateY(-actualRotateSpeed)
-        if (this.moveLeft && this.canRotateLeft()) this.player.rotateY(actualRotateSpeed)
+        if (this.startGame) {
+            const actualMoveSpeed = delta * this.movementSpeed;
+            this.currentZpos -= 0.05
+            if (!this.mousePressed) {
+                this.player.position.z -= 0.05
+            }
+            if (this.moveRight && this.canMoveRight()) this.player.translateX(actualMoveSpeed)
+            if (this.moveLeft && this.canMoveLeft()) this.player.translateX(-actualMoveSpeed)
 
-        this.playerBB.copy(this.player.geometry.boundingBox).applyMatrix4(this.player.matrixWorld)
+
+            if (this.mousePressed) {
+                this.raycaster.setFromCamera(this.pointer, this.camera);
+                const intersects = this.raycaster.intersectObjects([this.ground]);
+                if (intersects.length) {
+                    const {
+                        point
+                    } = intersects[0];
+                    this.player.position.set(point.x / 1.5, 0.2, this.currentZpos)
+                }
+            }
+
+            this.playerBB.copy(this.player.geometry.boundingBox).applyMatrix4(this.player.matrixWorld)
+        }
     }
 }

@@ -44,7 +44,7 @@ export default class Game {
         this.scene.fog = new THREE.Fog(0xffffff, 4, 35)
 
         this.groundObj = new Ground(this.scene)
-        this.playerObj = new Player(this.scene)
+        this.playerObj = new Player(this.scene, this.camera, this.groundObj.ground)
         directionalLight.target = this.playerObj.player
 
         this.ballsPool = new Pool(() => this.createBallObjects(), (obj) => this.resetBallObject(obj), 100)
