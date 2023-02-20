@@ -33,7 +33,7 @@ export default class Game {
         this.creteRenderer()
 
         this.ballsArray = []
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 35);
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.4, 35);
 
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x924ef2);
@@ -62,7 +62,15 @@ export default class Game {
         this.gameFinished = true
         this.playerObj.startGame = false
         const button = document.getElementById("play-btn")
-        button.style.display = 'inline'
+        button.style.visibility = 'visible'
+
+        const canvas = document.getElementById('second')
+        this.img = document.createElement("img");
+        this.img.src = 'assets/transparent.png';
+        this.img.width = window.innerWidth;
+        this.img.height = window.innerHeight;
+        canvas.appendChild(this.img)
+        canvas.style.visibility = 'visible'
         button.onclick = () => {
             window.location.assign('https://threejs.org/')
         }
@@ -124,6 +132,7 @@ export default class Game {
             }
 
             if (!this.timeOutStarted && this.playerObj.startGame) {
+                this.timeOutStarted = true
                 setTimeout(() => {
                     this.showButton()
                 }, 10000);
@@ -200,6 +209,10 @@ export default class Game {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        if (this.img) {
+            this.img.width = window.innerWidth;
+            this.img.height = window.innerHeight;
+        }
         this.update();
     }
 }
