@@ -1,28 +1,27 @@
-import {
-    MapControls
-} from "three/examples/jsm/controls/OrbitControls";
 import Player from "../objects/PlayerObject";
 import Ground from "../objects/GroundObject";
 import Lights from "../objects/Lights";
 import BallObject from "../objects/BallObject";
 import {
     getBallXPosition,
+    getRandNum,
     isGood
 } from "../utils/utils";
 import Pool, {
     PoolObject
 } from "./Pool";
+import Particles from "../objects/Particles";
 
 
 export default class Game {
-
     constructor() {
         this.minBallXPos = -3
         this.maxBallXPos = 3
         this.ballYPos = 0.5
         this.startZPos = -6
         this.ballZPosOffset = 1
-
+        this.score = 0
+        this.ballsNum = 0
 
         this.container = document.querySelector('#main');
         document.body.appendChild(this.container);
@@ -34,46 +33,41 @@ export default class Game {
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 35);
 
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x999999);
+        this.scene.background = new THREE.Color(0x924ef2);
+        this.scene.backgroundIntensity = 0.85
 
         this.lights = new Lights(this.scene)
         const {
             directionalLight
         } = this.lights
 
-        this.scene.fog = new THREE.Fog(0xffffff, 1, 70)
-
-        //TODO: Remove at the end
-        const grid = new THREE.GridHelper(50, 50, 0xffffff, 0x333333);
-        this.scene.add(grid);
+        this.scene.fog = new THREE.Fog(0xffffff, 4, 35)
 
         this.groundObj = new Ground(this.scene)
         this.playerObj = new Player(this.scene)
         directionalLight.target = this.playerObj.player
 
-        const mapControls = new MapControls(this.camera, this.renderer.domElement);
-        mapControls.addEventListener('change', () => this.render());
-        mapControls.update();
+        this.ballsPool = new Pool(() => this.createBallObjects(), (obj) => this.resetBallObject(obj), 100)
+        this.particlePool = new Pool(() => this.createParticleObjects(), (obj) => this.resetParticleObjects(obj), 100)
 
-        this.camera.position.set(this.playerObj.player.position.x, this.playerObj.player.position.y + 2, this.playerObj.player.position.z + 3)
-
-        ////////////////////////////////////////////////////////////
-        // this.explosions = []
-        ////////////////////////////////////////////////////////////
-        // this.createBalls()
-        this.pool = new Pool(() => this.createObjects(), (obj) => this.resetObject(obj), 100)
-
-        this.ballsArray = this.pool.pool.map((obj) => {
-            if (obj.data.type === 'good_ball' || obj.data.type === 'bad_ball') return obj
-        })
+        this.particles = []
         window.addEventListener('resize', () => this.onWindowResize(), false);
         this.onWindowResize();
         this.renderer.setAnimationLoop(() => this.render())
     }
 
-    createObjects() {
-        const ballPosition = new THREE.Vector3(getBallXPosition(this.maxBallXPos, this.minBallXPos), this.ballYPos, this.startZPos - this.ballZPosOffset)
-        this.startZPos -= 1
+    createParticleObjects() {
+        const particles = new Particles(this.scene)
+        particles.makeParticles()
+        return particles
+    }
+
+    resetParticleObjects(obj) {
+        obj.data.reset()
+    }
+
+    createBallObjects() {
+        const ballPosition = new THREE.Vector3(0, 0, 0)
         const ballObj = new BallObject(this.scene).create(isGood()).setPosition(ballPosition)
         return ballObj
     }
@@ -82,10 +76,10 @@ export default class Game {
      * 
      * @param {PoolObject} obj 
      */
-    resetObject(obj) {
-        if (obj.data instanceof BallObject) {
-            obj.data.hide()
-        }
+    resetBallObject(obj) {
+        obj.data.hide()
+        if (this.ballsNum > 0)
+            this.ballsNum--
     }
 
     creteRenderer() {
@@ -103,49 +97,82 @@ export default class Game {
 
     render() {
         this.renderer.render(this.scene, this.camera);
-        this.playerObj.updatePlayer(this.clock.getDelta())
+        this.playerObj.update(this.clock.getDelta())
         this.camera.position.set(this.playerObj.player.position.x, this.playerObj.player.position.y + 2, this.playerObj.player.position.z + 3)
         this.checkPlayerCollision()
         this.lights.directionalLight.position.set(this.playerObj.player.position.x + 5, this.playerObj.player.position.y + 10, this.playerObj.player.position.z);
         this.updateBalls()
+
+        if (this.particlePool.pool.length > 0) {
+            this.particlePool.pool.forEach((exp) => {
+                if (!exp.free) {
+                    exp.data.update()
+                }
+            })
+        }
     }
 
     updateBalls() {
-        this.removeBalls()
-        this.addBalls()
+        this.removeBall()
+        this.addBall()
     }
 
-    addBalls() {
-        this.ballsArray.forEach((ballPoolObject) => {
-            if (ballPoolObject.free &&
-                !ballPoolObject.data.ball.showed &&
-                ballPoolObject.data.ball.position.z < this.playerObj.player.position.z - 4 &&
-                ballPoolObject.data.ball.position.z > this.playerObj.player.position.z - 15) {
-                ballPoolObject.data.show()
-            }
-        })
+    addBall() {
+        if (this.ballsNum < 15) {
+            const newBall = this.ballsPool.getFree()
+            newBall.data.ball.position.set(getBallXPosition(this.maxBallXPos, this.minBallXPos), this.ballYPos, getRandNum(this.playerObj.player.position.z - 10, this.playerObj.player.position.z - 15))
+            newBall.data.show()
+            this.ballsArray.push(newBall)
+            this.ballsNum++
+        }
+
     }
 
-    removeBalls() {
+    removeBall() {
         this.ballsArray.forEach((ballPoolObject) => {
             if (!ballPoolObject.free &&
                 ballPoolObject.data.ball.position.z >
                 this.playerObj.player.position.z) {
-                this.pool.release(ballPoolObject)
+                this.ballsPool.release(ballPoolObject)
             }
         })
     }
 
+    /**
+     * 
+     * @param {string} ballType 
+     */
+    updateScore(ballType) {
+        if (ballType === 'good_ball') this.score++
+        else this.score--
+
+        const scoreEl = document.getElementById('score')
+        scoreEl.textContent = `Score: ${this.score}`
+    }
+
     checkPlayerCollision() {
         const {
-            playerBB
+            playerBB,
         } = this.playerObj
-
         for (const ballObj of this.ballsArray) {
-            if (playerBB.intersectsSphere(ballObj.data.ballBB)) {
-                this.pool.release(ballObj)
+            if (!ballObj.free && playerBB.intersectsSphere(ballObj.data.ballBB)) {
+                this.explode(ballObj.data.ball.position)
+                this.updateScore(ballObj.data.type)
+                this.ballsPool.release(ballObj)
             }
         }
+    }
+
+    /**
+     * 
+     * @param {THREE.Vector3} position 
+     */
+    explode(position) {
+        const particle = this.particlePool.getFree()
+        particle.data.explode(position)
+        setTimeout(() => {
+            this.particlePool.release(particle)
+        }, 1000);
     }
 
     onWindowResize() {

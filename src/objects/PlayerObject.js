@@ -109,7 +109,7 @@ export default class PlayerObject {
      * 
      * @param {number} delta 
      */
-    updatePlayer(delta) {
+    update(delta) {
         const actualMoveSpeed = delta * this.movementSpeed;
         const actualRotateSpeed = delta * this.rotateSpeed;
         this.player.position.z -= 0.05

@@ -43,12 +43,10 @@ export default class BallObject {
     }
 
     hide() {
-        this.ball.visible = false
         this.scene.remove(this.ball)
     }
 
     show() {
-        this.ball.visible = true
         this.scene.add(this.ball)
     }
 }
