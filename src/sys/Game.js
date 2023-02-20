@@ -159,6 +159,7 @@ export default class Game {
                 this.explode(ballObj.data.ball.position)
                 this.updateScore(ballObj.data.type)
                 this.ballsPool.release(ballObj)
+                this.playerObj.changePlayerColor(ballObj.data.type)
             }
         }
     }

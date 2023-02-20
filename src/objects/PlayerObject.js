@@ -107,6 +107,25 @@ export default class PlayerObject {
 
     /**
      * 
+     * @param {string} type 
+     */
+    changePlayerColor(type) {
+        const x = type === 'bad_ball' ? 1 : 0;
+        const y = type === 'bad_ball' ? 0 : 1;
+        const z = 0;
+        this.player.material.vertexColors = true;
+        const geometry = this.player.geometry;
+        const count = geometry.attributes.position.count;
+        if (!geometry.attributes.color) {
+            const buffer = new THREE.BufferAttribute(new Float32Array(count * 3), 3)
+            geometry.setAttribute('color', buffer);
+        };
+        for (let i = 0; i < count; i++) geometry.attributes.color.setXYZ(i, x, y, z);
+        geometry.attributes.color.needsUpdate = true;
+    }
+
+    /**
+     * 
      * @param {number} delta 
      */
     update(delta) {
