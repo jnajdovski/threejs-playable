@@ -22,6 +22,9 @@ export default class Game {
         this.ballZPosOffset = 1
         this.score = 0
         this.ballsNum = 0
+        this.maxNumOfBalls = 15
+        this.gameFinished = false
+        this.timeOutStarted = false
 
         this.container = document.querySelector('#main');
         document.body.appendChild(this.container);
@@ -50,10 +53,19 @@ export default class Game {
         this.ballsPool = new Pool(() => this.createBallObjects(), (obj) => this.resetBallObject(obj), 100)
         this.particlePool = new Pool(() => this.createParticleObjects(), (obj) => this.resetParticleObjects(obj), 100)
 
-        this.particles = []
         window.addEventListener('resize', () => this.onWindowResize(), false);
         this.onWindowResize();
-        this.renderer.setAnimationLoop(() => this.render())
+        this.renderer.setAnimationLoop(() => this.update())
+    }
+
+    showButton() {
+        this.gameFinished = true
+        this.playerObj.startGame = false
+        const button = document.getElementById("play-btn")
+        button.style.display = 'inline'
+        button.onclick = () => {
+            window.location.assign('https://threejs.org/')
+        }
     }
 
     createParticleObjects() {
@@ -68,8 +80,7 @@ export default class Game {
 
     createBallObjects() {
         const ballPosition = new THREE.Vector3(0, 0, 0)
-        const ballObj = new BallObject(this.scene).create(isGood()).setPosition(ballPosition)
-        return ballObj
+        return new BallObject(this.scene).create(isGood()).setPosition(ballPosition)
     }
 
     /**
@@ -95,21 +106,30 @@ export default class Game {
         this.container.appendChild(this.renderer.domElement);
     }
 
-    render() {
+    update() {
         this.renderer.render(this.scene, this.camera);
-        this.playerObj.update(this.clock.getDelta())
-        this.camera.position.set(this.playerObj.player.position.x, this.playerObj.player.position.y + 2, this.playerObj.player.position.z + 3)
-        this.checkPlayerCollision()
-        this.lights.directionalLight.position.set(this.playerObj.player.position.x + 5, this.playerObj.player.position.y + 10, this.playerObj.player.position.z);
-        this.updateBalls()
+        if (!this.gameFinished) {
+            this.playerObj.update(this.clock.getDelta())
+            this.camera.position.set(this.playerObj.player.position.x, this.playerObj.player.position.y + 2, this.playerObj.player.position.z + 3)
+            this.checkPlayerCollision()
+            this.lights.directionalLight.position.set(this.playerObj.player.position.x + 5, this.playerObj.player.position.y + 10, this.playerObj.player.position.z);
+            this.updateBalls()
 
-        if (this.particlePool.pool.length > 0) {
-            this.particlePool.pool.forEach((exp) => {
-                if (!exp.free) {
-                    exp.data.update()
-                }
-            })
+            if (this.particlePool.pool.length > 0) {
+                this.particlePool.pool.forEach((exp) => {
+                    if (!exp.free) {
+                        exp.data.update()
+                    }
+                })
+            }
+
+            if (!this.timeOutStarted && this.playerObj.startGame) {
+                setTimeout(() => {
+                    this.showButton()
+                }, 10000);
+            }
         }
+
     }
 
     updateBalls() {
@@ -118,7 +138,7 @@ export default class Game {
     }
 
     addBall() {
-        if (this.ballsNum < 15) {
+        if (this.ballsNum < this.maxNumOfBalls) {
             const newBall = this.ballsPool.getFree()
             newBall.data.ball.position.set(getBallXPosition(this.maxBallXPos, this.minBallXPos), this.ballYPos, getRandNum(this.playerObj.player.position.z - 10, this.playerObj.player.position.z - 15))
             newBall.data.show()
@@ -180,6 +200,6 @@ export default class Game {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.render();
+        this.update();
     }
 }
