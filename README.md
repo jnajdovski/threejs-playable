@@ -7,7 +7,7 @@ cd threejs-playable/
 npm install
 npm start
 ```
-[Project is running on: http://localhost:9000/](http://localhost:8080/)
+[Project is running on: http://localhost:8080/](http://localhost:8080/)
 
 ### :bricks: Build
 ```js
